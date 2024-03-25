@@ -17,15 +17,15 @@ func main() {
 	if(len(os.Args) > 1){
 		problemSet = os.Args[1]
 	}
+	path := fmt.Sprintf("questions-repo/%v.csv" , problemSet)
 
-	file , err := os.Open(fmt.Sprintf("questions-repo/%v.csv" , problemSet))
+	file , err := os.Open(path)
 
 	if err != nil {
 		log.Fatal("No File found")
 	}
 
 	reader := csv.NewReader(file)
-	
 	  
 	for {
 		data , err := reader.Read()
