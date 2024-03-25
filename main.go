@@ -57,7 +57,6 @@ func main() {
 			break
 		}
 		operation := data[0]
-		
 
 		r := regexp.MustCompile(`(\\|\+|-|\*)`)
 
@@ -67,15 +66,26 @@ func main() {
 
 		operands := strings.Split(operation, operator)
 
-		leftOperand , isLeftParseError := strconv.ParseInt(operands[0] , 10 , 16)
-		rightOperand , isRightParseError := strconv.ParseInt(operands[1] , 10 , 16)
-		result ,  isResultParseError :=  strconv.ParseInt(data[1] , 10 , 16) 
+		fmt.Fprintf(os.Stdout, "What is the result of that equation ?\n")
+		fmt.Fprintf(os.Stdout, "%s %s %s = ?\n", operands[0], operator, operands[1])
+		fmt.Fprintf(os.Stdout, "Type your result here : ")
+		userInput := ""
+		_, isScanError := fmt.Fscan(os.Stdin, &userInput)
+
+		if isScanError != nil {
+			log.Fatal("Wrong entry")
+
+		}
+
+		leftOperand, isLeftParseError := strconv.ParseInt(operands[0], 10, 16)
+		rightOperand, isRightParseError := strconv.ParseInt(operands[1], 10, 16)
+		result, isResultParseError := strconv.ParseInt(data[1], 10, 16)
 
 		if isLeftParseError != nil || isRightParseError != nil || isResultParseError != nil {
 			log.Fatal("Not Valid Number")
 		}
 
-		fmt.Printf("lhs : %v , rhs : %v , total : %v \n" , leftOperand , rightOperand , leftOperand + rightOperand)
+		fmt.Println(userInput)
 
 	}
 
