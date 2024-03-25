@@ -32,23 +32,8 @@ func main() {
 
 	reader := csv.NewReader(file)
 
-	// totalQuestionNumber := 0
-	// correctAnswers := 0
-
-	// arithmeticOperationMap := make(map[rune]func(leftOperand int , rightOperand int ) int{
-	// 	'+': func(leftOperand int , rightOperand int ) int {
-	// 		return leftOperand + rightOperand
-	// 	},
-	// 	'-' : func(leftOperand int , rightOperand int ) int {
-	// 		return leftOperand - rightOperand
-	// 	},
-	// 	'*' : func(leftOperand int , rightOperand int ) int {
-	// 		return leftOperand * rightOperand
-	// 	},
-	// 	'/' : func(leftOperand int , rightOperand int ) int {
-	// 		return leftOperand / rightOperand
-	// 	},
-	// })
+	totalQuestionNumber := 0
+	correctAnswers := 0
 
 	for {
 		data, err := reader.Read()
@@ -69,7 +54,7 @@ func main() {
 		fmt.Fprintf(os.Stdout, "What is the result of that equation ?\n")
 		fmt.Fprintf(os.Stdout, "%s %s %s = ?\n", operands[0], operator, operands[1])
 		fmt.Fprintf(os.Stdout, "Type your result here : ")
-		userInput := ""
+		userInput := 0
 		_, isScanError := fmt.Fscan(os.Stdin, &userInput)
 
 		if isScanError != nil {
@@ -77,17 +62,21 @@ func main() {
 
 		}
 
-		leftOperand, isLeftParseError := strconv.ParseInt(operands[0], 10, 16)
-		rightOperand, isRightParseError := strconv.ParseInt(operands[1], 10, 16)
-		result, isResultParseError := strconv.ParseInt(data[1], 10, 16)
+		result, isParseError := strconv.ParseInt(data[1], 10, 0)
 
-		if isLeftParseError != nil || isRightParseError != nil || isResultParseError != nil {
+		if  isParseError != nil {
 			log.Fatal("Not Valid Number")
 		}
 
-		fmt.Println(userInput)
+		if(int(result) == userInput){
+			correctAnswers++
+		}
+		totalQuestionNumber++
+
 
 	}
+	fmt.Fprintf(os.Stdout, "You answered %v correct out of %v question" , correctAnswers, totalQuestionNumber)
+
 
 	defer file.Close()
 
