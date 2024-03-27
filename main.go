@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -22,55 +23,13 @@ type Quiz struct {
 	totalQuestionNumber int
 }
 
-func getCorrespondingTimeUnit(timeUnit string) time.Duration {
-	switch timeUnit {
-	case "s":
-		return time.Second
-	case "m":
-		return time.Minute
-	case "h":
-		return time.Hour
-	default:
-		return time.Second
-	}
-}
 
-func runQuiz(timer time.Timer, done chan Quiz)  {
-	select {
-	case <-timer.C:
-		fmt.Fprintf(os.Stdout, "\nTime is up!\n")
-		os.Exit(0)
-	case quiz := <-done:
-		fmt.Fprintf(os.Stdout, "You answered %v correct out of %v questions\n", quiz.correctAnswers, quiz.totalQuestionNumber)
-	}
-}
+func runQuiz(problemSet string, quizChan chan Quiz) {
 
-func main() {
-
-	var timeLimit time.Duration = DEFAULT_TIME
-	timeUnit := DEFAULT_TIME_UNIT
-	
-
-	probmeSetPtr := flag.String("source", DEFAULT_PROBLEMSET , "source of questions")
-	timeLimitPtr := flag.Int("time", DEFAULT_TIME, "time limit for the quiz")
-	timeUnitPtr := flag.String("time-unit", DEFAULT_TIME_UNIT, "time unit for the quiz")
-
-	flag.Parse()
-
-	problemSet := *probmeSetPtr
-	timeLimit = time.Duration(*timeLimitPtr)
-	timeUnit = *timeUnitPtr
 
 	path := fmt.Sprintf("questions-repo/%v.csv", problemSet)
 
 	file, err := os.Open(path)
-
-	quizChan := make(chan Quiz)
-	timer := time.NewTimer(timeLimit * getCorrespondingTimeUnit(timeUnit))
-
-	go runQuiz(*timer, quizChan)
-
-
 
 	if err != nil {
 		log.Fatal("No File found")
@@ -117,5 +76,41 @@ func main() {
 
 	defer close(quizChan)
 	defer file.Close()
+
+}
+
+func terminateAppWorker(timer time.Timer, solved chan Quiz , wg *sync.WaitGroup)  {
+	select {
+	case <-timer.C:
+		fmt.Fprintf(os.Stdout, "\nTime is up!\n")
+		wg.Done()
+	case data := <-solved:
+		wg.Done()
+		fmt.Fprintf(os.Stdout, "You answered %v correct out of %v questions\n", data.correctAnswers, data.totalQuestionNumber)
+	}
+}
+
+func main() {
+
+	problemSetPtr := flag.String("source", DEFAULT_PROBLEMSET , "source of questions")
+	timeLimitPtr  := flag.Duration("time", DEFAULT_TIME, "time limit for the quiz")
+
+	flag.Parse()
+
+	problemSet := *problemSetPtr
+	timeLimit := *timeLimitPtr	
+
+	var wg sync.WaitGroup
+
+
+	quizChan := make(chan Quiz)
+	timer := time.NewTimer(timeLimit)
+
+	wg.Add(1)
+	go runQuiz(problemSet, quizChan)
+	go terminateAppWorker(*timer, quizChan , &wg)
+	wg.Wait()
+
+
 
 }
